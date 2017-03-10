@@ -1,18 +1,20 @@
 package com.owsega.hellotractorsample;
 
 import android.content.Intent;
-import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -21,21 +23,36 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.owsega.hellotractorsample.realm.Farmer;
+import com.owsega.hellotractorsample.realm.FarmerFields;
 
+import butterknife.BindView;
+import butterknife.OnClick;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
-import rebus.permissionutils.PermissionEnum;
-import rebus.permissionutils.PermissionUtils;
 
 public class MapsActivity extends BaseActivity implements
         OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener,
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleMap.OnMarkerClickListener {
 
+    @BindView(R.id.profile_pic)
+    ImageView profile_pic;
+    @BindView(R.id.header_wrapper)
+    FrameLayout header_wrapper;
+    @BindView(R.id.name)
+    TextView name;
+    @BindView(R.id.address)
+    TextView address;
+    @BindView(R.id.phone)
+    TextView phone;
+    @BindView(R.id.farmSize)
+    TextView farmSize;
+    @BindView(R.id.textViewOptions)
+    TextView textViewOptions;
+    Farmer currentFarmer;
     private GoogleMap mMap;
-    private GoogleApiClient mGoogleApiClient;
+
+    private BottomSheetBehavior bottomSheetBehavior;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,41 +68,56 @@ public class MapsActivity extends BaseActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        FrameLayout bottomSheetLayout = (FrameLayout) findViewById(R.id.bottom_sheet_wrappper);
+        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
-            public void onClick(View view) {
-                startActivity(new Intent(MapsActivity.this, FarmerDetailsActivity.class));
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                switch (newState) {
+                    case BottomSheetBehavior.STATE_HIDDEN:
+//                        finish();
+                        break;
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                Log.e("seyi", "slideOffset:" + slideOffset);
+                int initialHeight = 80;
+                int finalHeight = 200;
+                int heightDifference = finalHeight - initialHeight;
+                float currentHeight = slideOffset * heightDifference;
+                float scale = (initialHeight + currentHeight)/ finalHeight;
+                profile_pic.setScaleY(scale);
+                Log.e("seyi", "curentHeight: " + scale);
             }
         });
-
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        Utils.verifyLocationPermissions(this);
         Utils.addDummyFarmers(realm);
     }
 
     @Override
-    protected void onStart() {
-        mGoogleApiClient.connect();
-        super.onStart();
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_maps_activity, menu);
+        return true;
     }
 
     @Override
-    protected void onStop() {
-        mGoogleApiClient.disconnect();
-        super.onStop();
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_add) {
+            startActivity(new Intent(this, FarmerDetailsActivity.class));
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -100,9 +132,9 @@ public class MapsActivity extends BaseActivity implements
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setOnMarkerClickListener(this);
 
         LatLng abuja = new LatLng(9.078875, 7.484294);
-        mMap.addMarker(new MarkerOptions().position(abuja).title("Hello Tractor Inc"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(abuja));
 
         // add farmers' markers to map
@@ -119,30 +151,35 @@ public class MapsActivity extends BaseActivity implements
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        if (!PermissionUtils.isGranted(this, PermissionEnum.ACCESS_FINE_LOCATION)) return;
-        Location location = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        if (location != null) {
-            // todo do something with location
-            Log.e("seyi","new Location received: " + location.toString());
-        }
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-    }
-
-    @Override
     public boolean onMarkerClick(Marker marker) {
-        showBottomSheet(Long.valueOf(marker.getTitle()));
+        Long farmerId = Long.valueOf(marker.getTitle());
+        currentFarmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();
+        showBottomSheet();
         return true;
     }
 
-    private void showBottomSheet(Long farmerId) {
+    @OnClick(R.id.delete_btn)
+    public void deleteFarmer() {
+        Utils.showDeleteFarmerDialog(this, realm, currentFarmer);
+    }
 
+    @OnClick(R.id.update_btn)
+    public void updateFarmer() {
+        startActivity(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
+                .putExtra(Intent.EXTRA_REFERRER, currentFarmer.getId()));
+    }
+
+    private void showBottomSheet() {
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        bottomSheetBehavior.setHideable(false);
+
+        name.setText(currentFarmer.getName());
+        address.setText(currentFarmer.getDescription());
+        phone.setText(currentFarmer.getPhone());
+        farmSize.setText(currentFarmer.getFarmSizeStr());
+        Glide.with(this)
+                .load("http://loremflickr.com/320/240")
+                .diskCacheStrategy(DiskCacheStrategy.NONE)
+                .into(profile_pic);
     }
 }

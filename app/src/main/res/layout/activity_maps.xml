@@ -31,14 +31,17 @@
         android:layout_height="match_parent"
         map:cameraZoom="7" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
-        android:layout_width="wrap_content"
+    <android.support.v4.widget.NestedScrollView
+        android:id="@+id/bottom_sheet_wrappper"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:fabSize="normal"
-        app:srcCompat="@drawable/ic_add_white_24dp" />
+        android:elevation="4dp"
+        app:behavior_hideable="true"
+        app:behavior_peekHeight="80dp"
+        app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+
+        <include layout="@layout/farmer_bottomsheet" />
+    </android.support.v4.widget.NestedScrollView>
 
 </android.support.design.widget.CoordinatorLayout>
 

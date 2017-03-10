@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">HelloTractor Sample</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">Farmers Map</string>
     <string name="action_settings">Settings</string>
 
     <string name="title_activity_farmer_create">Create Farmer</string>
@@ -9,5 +9,11 @@
     <string name="grant_pictures_permissn_in_settings">Please allow HelloTractorSample access to your location in Settings. Do you want to launch Settings now?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="profile_picture">Profile Picture</string>
+    <string name="delete_armer_confirmation">%s will be permanently removed from the system, are you sure?</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_add">Add</string>
+    <string name="action_add_farmer">Add a Farmer</string>
+    <string name="action_update">Update Farmer</string>
 
 </resources>

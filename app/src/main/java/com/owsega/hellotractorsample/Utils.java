@@ -1,7 +1,11 @@
 package com.owsega.hellotractorsample;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 
 import com.owsega.hellotractorsample.realm.Farmer;
 
@@ -17,6 +21,11 @@ import rebus.permissionutils.SmartCallback;
  * @author Seyi Owoeye. Created on 3/9/17.
  */
 public class Utils {
+
+    static String[] names = new String[]{
+            "Seyi", "Hammed", "Gabe", "Aminu", "Kaura", "Mariam", "Chika", "Misturah",
+            "Khan", "Khadijat", "John", "Christopher", "Simbi", "Dan"
+    };
 
     /**
      * ask the user for permission to access Location Services, else close the app
@@ -52,10 +61,20 @@ public class Utils {
         }
     }
 
-    static String[] names = new String[]{
-            "Seyi", "Hammed", "Gabe", "Aminu", "Kaura", "Mariam", "Chika", "Misturah",
-            "Khan", "Khadijat", "John", "Christopher", "Simbi", "Dan"
-    };
+    public static void showDeleteFarmerDialog(Context ctx, Realm realm, final Farmer farmer) {
+        new AlertDialog.Builder(ctx)
+                .setMessage(ctx.getString(R.string.delete_armer_confirmation, farmer.getName()))
+                .setPositiveButton(R.string.yes,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface d, int which) {
+                                Farmer.deleteFromRealm(farmer);
+                                //todo notify ui and server
+                            }
+                        })
+                .setNegativeButton(R.string.no, null)
+                .show();
+    }
 
     public static void addDummyFarmers(Realm realm) {
 
@@ -64,17 +83,55 @@ public class Utils {
             realm.executeTransactionAsync(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
+                    realm.createObject(Farmer.class)
+                            .setLatitude(9.078875)
+                            .setLatitude(7.484294)
+                            .setName("Hello Tractor Inc")
+                            .setFarmSize(0)
+                            .setPhone("09096909999");
+
                     for (int i = 0; i < 10; i++) {
-                        Farmer farmer = realm.createObject(Farmer.class);
-                        farmer.setFarmSize(Math.random() * 120000);
-                        farmer.setLatitude(6 + Math.random() * 5);
-                        farmer.setLongitude(3 + Math.random() * 8);
-                        farmer.setName(names[(int) (Math.random() * names.length)] + " " +
-                                names[(int) (Math.random() * names.length)]);
-                        farmer.setPhone("08106184121");
+                        realm.createObject(Farmer.class)
+                                .setFarmSize(Math.random() * 120000)
+                                .setLatitude(6 + Math.random() * 5)
+                                .setLongitude(3 + Math.random() * 8)
+                                .setName(names[(int) (Math.random() * names.length)] + " " +
+                                        names[(int) (Math.random() * names.length)])
+                                .setPhone("08106184121");
                     }
                 }
             });
+        }
+    }
+
+    public class ResizeAnimation extends Animation {
+        final int targetHeight;
+        View view;
+        int startHeight;
+
+        public ResizeAnimation(View view, int targetHeight, int startHeight) {
+            this.view = view;
+            this.targetHeight = targetHeight;
+            this.startHeight = startHeight;
+        }
+
+        @Override
+        protected void applyTransformation(float interpolatedTime, Transformation t) {
+            int newHeight = (int) (startHeight + targetHeight * interpolatedTime);
+            //to support decent animation, change new heigt as Nico S. recommended in comments
+            //int newHeight = (int) (startHeight+(targetHeight - startHeight) * interpolatedTime);
+            view.getLayoutParams().height = newHeight;
+            view.requestLayout();
+        }
+
+        @Override
+        public void initialize(int width, int height, int parentWidth, int parentHeight) {
+            super.initialize(width, height, parentWidth, parentHeight);
+        }
+
+        @Override
+        public boolean willChangeBounds() {
+            return true;
         }
     }
 }
