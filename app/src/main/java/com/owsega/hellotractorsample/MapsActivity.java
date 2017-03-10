@@ -7,7 +7,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,7 +22,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.kinvey.android.Client;
 import com.kinvey.android.callback.KinveyUserCallback;
 import com.kinvey.java.User;
 import com.owsega.hellotractorsample.realm.Farmer;
@@ -66,8 +64,6 @@ public class MapsActivity extends BaseActivity implements
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheetBehavior;
 
-    Client mKinveyClient;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Realm.init(this);
@@ -77,19 +73,13 @@ public class MapsActivity extends BaseActivity implements
                 .build());
         super.onCreate(savedInstanceState);
 
-         mKinveyClient = new Client.Builder(
-                "kid_ryMycQlie",
-                "0f4be6067cc64d35872644f782e34cd3", getApplicationContext())
-                .build();
-
-        mKinveyClient.user().login(new KinveyUserCallback() {
+        if (!kinvey.user().isUserLoggedIn()) kinvey.user().login(new KinveyUserCallback() {
             @Override
             public void onFailure(Throwable error) {
-                Log.e("seyi", "Login Failure", error);
             }
+
             @Override
             public void onSuccess(User result) {
-                Log.e("seyi","Logged in a new implicit user with id: " + result.getId());
             }
         });
 
@@ -132,7 +122,7 @@ public class MapsActivity extends BaseActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        Farmer.addDummyFarmers(this, realm);
+//        Farmer.addDummyFarmers(this, realm);
     }
 
     @Override
@@ -214,7 +204,6 @@ public class MapsActivity extends BaseActivity implements
         if (currentFarmer != null) {
             mMarkers.get(currentFarmer.getId()).remove();
             Utils.showDeleteFarmerDialog(this, currentFarmer);
-            Log.e("seyi", "is Nottom sheet hiding??");
             hideBottomSheet();
         }
     }
@@ -260,7 +249,6 @@ public class MapsActivity extends BaseActivity implements
 
     @Override
     public void onChange(RealmResults<Farmer> farmers) {
-        Log.e("seyi", "change is here!!!");
         addAllFarmersMarkers(farmers);
     }
 }

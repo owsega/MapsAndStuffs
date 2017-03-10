@@ -13,12 +13,10 @@ import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.Transformation;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.owsega.hellotractorsample.realm.Farmer;
 
 import java.io.ByteArrayOutputStream;
@@ -34,10 +32,6 @@ import static com.owsega.hellotractorsample.realm.Farmer.deleteFarmer;
  */
 public class Utils {
 
-    public static String[] names = new String[]{
-            "Seyi", "Hammed", "Gabe", "Aminu", "Kaura", "Mariam", "Chika", "Misturah",
-            "Khan", "Khadijat", "John", "Christopher", "Simbi", "Dan"
-    };
 
     public static void showDeleteFarmerDialog(final Context ctx, final Farmer farmer) {
         new AlertDialog.Builder(ctx)
@@ -76,7 +70,10 @@ public class Utils {
         if (pictureHexCode != null) {
             try {
                 byte[] decodedString = Base64.decode(pictureHexCode, Base64.DEFAULT);
-                Glide.with(context).load(decodedString).into(profilePic);
+                Glide.with(context)
+                        .load(decodedString)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .into(profilePic);
             } catch (Exception e) {
                 Log.e("ImageUtils", e.getMessage(), e);
                 profilePic.setImageResource(R.drawable.avatar);
@@ -140,37 +137,5 @@ public class Utils {
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
         return bitmap;
-    }
-
-
-    public class ResizeAnimation extends Animation {
-        final int targetHeight;
-        View view;
-        int startHeight;
-
-        public ResizeAnimation(View view, int targetHeight, int startHeight) {
-            this.view = view;
-            this.targetHeight = targetHeight;
-            this.startHeight = startHeight;
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            int newHeight = (int) (startHeight + targetHeight * interpolatedTime);
-            //to support decent animation, change new heigt as Nico S. recommended in comments
-            //int newHeight = (int) (startHeight+(targetHeight - startHeight) * interpolatedTime);
-            view.getLayoutParams().height = newHeight;
-            view.requestLayout();
-        }
-
-        @Override
-        public void initialize(int width, int height, int parentWidth, int parentHeight) {
-            super.initialize(width, height, parentWidth, parentHeight);
-        }
-
-        @Override
-        public boolean willChangeBounds() {
-            return true;
-        }
     }
 }

@@ -77,7 +77,6 @@ public class FarmerDetailsActivity extends BaseActivity implements
     private static final String LOCATION_KEY = "location";
     @BindView(R.id.bottomsheet)
     BottomSheetLayout bottomSheetLayout;
-    Farmer currentFarmer;
     @BindView(R.id.profile_pic)
     ImageView selectedImage;
     @BindView(R.id.name)
@@ -90,6 +89,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
     TextView locationTv;
     @BindView(R.id.save_btn)
     Button save_btn;
+
     LocationRequest mLocationRequest;
     private boolean mLocationPermissionDenied = false;
     private GoogleMap mMap;
@@ -117,8 +117,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                     .build();
         }
         if (savedInstanceState != null && savedInstanceState.keySet().contains(LOCATION_KEY)) {
-            mLocation = savedInstanceState.getParcelable(LOCATION_KEY);
-            updateUI();
+            onLocationChanged((Location) savedInstanceState.getParcelable(LOCATION_KEY));
         }
 
         if (getIntent().hasExtra(FARMER_EXTRA)) {  // it means we are updating not creating a new guy
@@ -438,6 +437,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
         mMap = googleMap;
 
         mMap.setOnMyLocationButtonClickListener(this);
+        mMap.setOnMapLongClickListener(this);
         enableMyLocation();
     }
 
@@ -508,12 +508,10 @@ public class FarmerDetailsActivity extends BaseActivity implements
     public void onConnected(@Nullable Bundle bundle) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            // Permission to access the location is missing.
             PermissionUtil.requestPermission(this, REQUEST_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, true);
         } else if (mMap != null) {
             // Access to the location has been granted to the app.
-            mLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            updateUI();
+            onLocationChanged(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
             createLocationRequest();
         }
         startLocationUpdates();
@@ -567,7 +565,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
 
     @Override
     public void onLocationChanged(Location location) {
-        mLocation = location;
+        if (location != null) mLocation = location;
         updateUI();
     }
 

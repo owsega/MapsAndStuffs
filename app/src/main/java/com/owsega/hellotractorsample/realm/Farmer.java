@@ -2,13 +2,14 @@ package com.owsega.hellotractorsample.realm;
 
 import android.content.Context;
 
+import com.owsega.hellotractorsample.BaseActivity;
+
 import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 
 import static com.owsega.hellotractorsample.Utils.getFarmerAddress;
-import static com.owsega.hellotractorsample.Utils.names;
 
 /**
  * Holds a farmer object
@@ -49,7 +50,6 @@ public class Farmer extends RealmObject {
     }
 
     public static void addDummyFarmers(final Context context, Realm realm) {
-
         long farmerCount = realm.where(Farmer.class).count();
         if (farmerCount < 25) {
             realm.executeTransactionAsync(new Realm.Transaction() {
@@ -65,8 +65,9 @@ public class Farmer extends RealmObject {
                             .setPhone("09096909999");
                     getFarmerAddress(context, realm, farmer);
                     realm.copyToRealmOrUpdate(farmer);
+                    FarmerEntity.addDummyFarmers((BaseActivity) context);
 
-                    for (int i = 0; i < 10; i++) {
+                /*    for (int i = 0; i < 10; i++) {
                         farmer = new Farmer()
                                 .setFarmSize(Math.random() * 120000)
                                 .setLatitude(6 + Math.random() * 5)
@@ -76,7 +77,7 @@ public class Farmer extends RealmObject {
                                 .setPhone("08106184121");
                         getFarmerAddress(context, realm, farmer);
                         realm.copyToRealmOrUpdate(farmer);
-                    }
+                    }*/
                 }
             });
         }

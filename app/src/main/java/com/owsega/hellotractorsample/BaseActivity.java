@@ -13,6 +13,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import com.kinvey.android.Client;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.realm.Realm;
@@ -30,9 +32,18 @@ import io.realm.Realm;
 public abstract class BaseActivity extends AppCompatActivity {
 
     protected Realm realm;
+    protected Client kinvey;
 
     @BindView(R.id.coordinator_layout)
     CoordinatorLayout rootCoordinatorLayout;
+
+    public Client getKinvey() {
+        if (kinvey == null){
+            kinvey = new Client.Builder(//key, appSecret
+                    getApplicationContext()).build();
+        }
+        return kinvey;
+    }
 
     public static Realm getRealm(Context context) {
         return ((BaseActivity) context).realm;
@@ -56,6 +67,7 @@ public abstract class BaseActivity extends AppCompatActivity {
                         WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
         realm = Realm.getDefaultInstance();
+        kinvey = getKinvey();
     }
 
     @Override

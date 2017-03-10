@@ -17,7 +17,7 @@
             android:id="@+id/profile_pic"
             android:layout_width="match_parent"
             android:layout_height="200dp"
-            android:layout_gravity="top"
+            android:layout_gravity="bottom"
             android:contentDescription="@string/profile_picture"
             android:scaleType="centerCrop"
             android:src="@drawable/avatar" />
@@ -76,39 +76,69 @@
             tools:text="Seyi Owoeye" />
     </FrameLayout>
 
-    <TextView
-        android:id="@+id/address"
-        style="@style/TextAppearance.AppCompat.Subhead"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="start"
-        android:paddingBottom="8dp"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        tools:text="131 Kaura Namoda, Abuja" />
+        android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/phone"
-        style="@style/TextAppearance.AppCompat.Subhead"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="start"
-        android:paddingBottom="8dp"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        tools:text="08106184121" />
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/address"
+            style="@style/TextAppearance.AppCompat.Subhead"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:editable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:gravity="start"
+            android:hint="Address"
+            android:inputType="none"
+            android:paddingBottom="8dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            tools:text="131 Kaura Namoda, Abuja" />
+    </android.support.design.widget.TextInputLayout>
 
-    <TextView
-        android:id="@+id/farmSize"
-        style="@style/TextAppearance.AppCompat.Subhead"
+    <android.support.design.widget.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="start"
-        android:paddingBottom="8dp"
-        android:paddingEnd="16dp"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        tools:text="45 hectares" />
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/phone"
+            style="@style/TextAppearance.AppCompat.Subhead"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:editable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:gravity="start"
+            android:hint="Phone Number"
+            android:inputType="none"
+            android:paddingBottom="8dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            tools:text="08106184121" />
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.design.widget.TextInputEditText
+            android:id="@+id/farmSize"
+            style="@style/TextAppearance.AppCompat.Subhead"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:editable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            android:gravity="start"
+            android:hint="Farm Size"
+            android:inputType="none"
+            android:paddingBottom="8dp"
+            android:paddingEnd="16dp"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            tools:text="45 hectares" />
+    </android.support.design.widget.TextInputLayout>
 </LinearLayout>
