@@ -21,8 +21,18 @@ android {
     }
 }
 
+allprojects {
+    repositories {
+        jcenter()
+        flatDir {
+            dirs 'libs'
+        }
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile(name:'kinvey-android-2.10.11', ext:'aar')
     compile "com.android.support:appcompat-v7:$supportLibVersion"
     compile "com.android.support:design:$supportLibVersion"
     compile "com.android.support:support-v4:$supportLibVersion"

@@ -65,6 +65,8 @@ public class FetchAddressIntentService extends IntentService {
                     "Latitude = " + location.getLatitude() +
                     ", Longitude = " +
                     location.getLongitude(), illegalArgumentException);
+        } catch (Exception e) {
+            Log.e("seyi","nought");
         }
 
         // Handle case where no address was found.

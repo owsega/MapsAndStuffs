@@ -134,6 +134,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                 location.setLongitude(farmer.getLongitude());
                 onLocationChanged(location);
             }
+            setTitle(R.string.title_activity_farmer_update);
         }
     }
 
@@ -178,10 +179,10 @@ public class FarmerDetailsActivity extends BaseActivity implements
         }
 
         final double finalFarmsize = farmsize;
+        final Farmer farmer = new Farmer();
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                Farmer farmer = new Farmer();
                 farmer.setFarmSize(finalFarmsize);
                 farmer.setName(name.getText().toString());
                 farmer.setPhone(phone.getText().toString());
@@ -198,6 +199,8 @@ public class FarmerDetailsActivity extends BaseActivity implements
                 name.postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        setResult(RESULT_OK);
+                        setResult(RESULT_OK, getIntent().putExtra(FARMER_EXTRA, farmer.getId()));
                         finish();
                     }
                 }, 2000);
@@ -415,11 +418,11 @@ public class FarmerDetailsActivity extends BaseActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_delete) {
+        /*if (id == R.id.action_delete) {
             if (currentFarmer != null) Utils.showDeleteFarmerDialog(this, currentFarmer);
             finish();
             return true;
-        }
+        }*/
 
         return super.onOptionsItemSelected(item);
     }

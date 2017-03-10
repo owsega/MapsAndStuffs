@@ -1,8 +1,10 @@
 package com.owsega.hellotractorsample;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -21,6 +23,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.kinvey.android.Client;
+import com.kinvey.android.callback.KinveyUserCallback;
+import com.kinvey.java.User;
 import com.owsega.hellotractorsample.realm.Farmer;
 import com.owsega.hellotractorsample.realm.FarmerFields;
 
@@ -41,6 +46,7 @@ public class MapsActivity extends BaseActivity implements
         GoogleMap.OnMarkerClickListener,
         RealmChangeListener<RealmResults<Farmer>> {
 
+    private static final int DETAILS_RC = 5;
     private final Map<Long, Marker> mMarkers = new ConcurrentHashMap<>();
     @BindView(R.id.profile_pic)
     ImageView profile_pic;
@@ -60,6 +66,8 @@ public class MapsActivity extends BaseActivity implements
     private GoogleMap mMap;
     private BottomSheetBehavior bottomSheetBehavior;
 
+    Client mKinveyClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Realm.init(this);
@@ -69,13 +77,30 @@ public class MapsActivity extends BaseActivity implements
                 .build());
         super.onCreate(savedInstanceState);
 
+         mKinveyClient = new Client.Builder(
+                "kid_ryMycQlie",
+                "0f4be6067cc64d35872644f782e34cd3", getApplicationContext())
+                .build();
+
+        mKinveyClient.user().login(new KinveyUserCallback() {
+            @Override
+            public void onFailure(Throwable error) {
+                Log.e("seyi", "Login Failure", error);
+            }
+            @Override
+            public void onSuccess(User result) {
+                Log.e("seyi","Logged in a new implicit user with id: " + result.getId());
+            }
+        });
+
         setContentView(R.layout.activity_maps);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FrameLayout bottomSheetLayout = (FrameLayout) findViewById(R.id.bottom_sheet_wrappper);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        hideBottomSheet();
+//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -121,7 +146,7 @@ public class MapsActivity extends BaseActivity implements
         int id = item.getItemId();
 
         if (id == R.id.action_add) {
-            startActivity(new Intent(this, FarmerDetailsActivity.class));
+            startActivityForResult(new Intent(this, FarmerDetailsActivity.class), DETAILS_RC);
             return true;
         }
 
@@ -153,16 +178,19 @@ public class MapsActivity extends BaseActivity implements
 
     private void addAllFarmersMarkers(RealmResults<Farmer> farmers) {
         mMap.clear();
-        LatLng location;
         for (Farmer farmer : farmers) {
-            location = new LatLng(farmer.getLatitude(), farmer.getLongitude());
-            Marker oldMarker = mMarkers.put(farmer.getId(), mMap.addMarker(new MarkerOptions()
-                    .position(location)
-                    .title(String.valueOf(farmer.getId()))
-                    .snippet(farmer.getLatLong())
-                    .draggable(false)));
-            if (oldMarker != null) oldMarker.remove();
+            addFarmerMarker(farmer);
         }
+    }
+
+    private void addFarmerMarker(Farmer farmer) {
+        LatLng location = new LatLng(farmer.getLatitude(), farmer.getLongitude());
+        Marker oldMarker = mMarkers.put(farmer.getId(), mMap.addMarker(new MarkerOptions()
+                .position(location)
+                .title(String.valueOf(farmer.getId()))
+                .snippet(farmer.getLatLong())
+                .draggable(false)));
+        if (oldMarker != null) oldMarker.remove();
     }
 
     @Override
@@ -178,23 +206,46 @@ public class MapsActivity extends BaseActivity implements
     }
 
     private void hideBottomSheet() {
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        bottomSheetBehavior.setPeekHeight(0);
     }
 
     @OnClick(R.id.delete_btn)
     public void deleteFarmer() {
-        if (currentFarmer != null) Utils.showDeleteFarmerDialog(this, currentFarmer);
+        if (currentFarmer != null) {
+            mMarkers.get(currentFarmer.getId()).remove();
+            Utils.showDeleteFarmerDialog(this, currentFarmer);
+            Log.e("seyi", "is Nottom sheet hiding??");
+            hideBottomSheet();
+        }
     }
 
     @OnClick(R.id.update_btn)
     public void updateFarmer() {
         if (currentFarmer != null)
-            startActivity(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
-                    .putExtra(FARMER_EXTRA, currentFarmer.getId()));
+            startActivityForResult(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
+                    .putExtra(FARMER_EXTRA, currentFarmer.getId()), DETAILS_RC);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            if (data != null && data.hasExtra(FARMER_EXTRA)) {
+                long farmerId = data.getLongExtra(FARMER_EXTRA, 0);
+                if (farmerId <= 0) return;
+                Marker marker = mMarkers.get(farmerId);
+                if (marker != null) marker.remove();
+                Farmer farmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();
+                if (farmer != null) {
+                    addFarmerMarker(farmer);
+                }
+            }
+        }
     }
 
     private void showBottomSheet() {
-        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        bottomSheetBehavior.setPeekHeight(Utils.dpToPx(this, 80));
+//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         bottomSheetBehavior.setHideable(false);
 
         try {
