@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,7 +61,6 @@ public class MapsActivity extends BaseActivity implements
                 .name("data")
                 .deleteRealmIfMigrationNeeded()
                 .build());
-
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_maps);
@@ -83,14 +82,17 @@ public class MapsActivity extends BaseActivity implements
 
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                Log.e("seyi", "slideOffset:" + slideOffset);
                 int initialHeight = 80;
                 int finalHeight = 200;
                 int heightDifference = finalHeight - initialHeight;
                 float currentHeight = slideOffset * heightDifference;
-                float scale = (initialHeight + currentHeight)/ finalHeight;
+                float scale = (initialHeight + currentHeight) / finalHeight;
                 profile_pic.setScaleY(scale);
-                Log.e("seyi", "curentHeight: " + scale);
+
+                int defaultPadding = Utils.dpToPx(MapsActivity.this, 16);
+                int topPadding = defaultPadding + Utils.dpToPx(MapsActivity.this, (int) currentHeight);
+                name.setPadding(defaultPadding, topPadding, defaultPadding, defaultPadding);
+                name.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16 + slideOffset * 16);
             }
         });
 
@@ -99,7 +101,8 @@ public class MapsActivity extends BaseActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        Utils.addDummyFarmers(realm);
+        realm.deleteAll();  // todo remove
+        Utils.addDummyFarmers(this, realm);
     }
 
     @Override
@@ -145,7 +148,7 @@ public class MapsActivity extends BaseActivity implements
             mMap.addMarker(new MarkerOptions()
                     .position(location)
                     .title(String.valueOf(farmer.getId()))
-                    .snippet(farmer.getDescription())
+                    .snippet(farmer.getLatLong())
                     .draggable(false));
         }
     }
@@ -174,7 +177,7 @@ public class MapsActivity extends BaseActivity implements
         bottomSheetBehavior.setHideable(false);
 
         name.setText(currentFarmer.getName());
-        address.setText(currentFarmer.getDescription());
+        address.setText(currentFarmer.getLatLong());
         phone.setText(currentFarmer.getPhone());
         farmSize.setText(currentFarmer.getFarmSizeStr());
         Glide.with(this)

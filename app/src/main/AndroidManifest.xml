@@ -35,6 +35,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.owsega.hellotractorsample.MapsActivity" />
         </activity>
+
+        <service
+            android:name=".FetchAddressIntentService"
+            android:exported="false"/>
+
     </application>
 
 </manifest>

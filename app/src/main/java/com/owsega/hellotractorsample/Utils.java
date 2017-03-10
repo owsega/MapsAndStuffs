@@ -2,7 +2,10 @@ package com.owsega.hellotractorsample;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.location.Location;
 import android.support.v7.app.AlertDialog;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
@@ -76,32 +79,50 @@ public class Utils {
                 .show();
     }
 
-    public static void addDummyFarmers(Realm realm) {
+    public static void addDummyFarmers(final Context context, Realm realm) {
 
         long farmerCount = realm.where(Farmer.class).count();
         if (farmerCount < 25) {
             realm.executeTransactionAsync(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    realm.createObject(Farmer.class)
+                    Farmer farmer = realm.createObject(Farmer.class)
                             .setLatitude(9.078875)
                             .setLatitude(7.484294)
                             .setName("Hello Tractor Inc")
                             .setFarmSize(0)
                             .setPhone("09096909999");
+                    getFarmerAddress(context, realm, farmer);
 
                     for (int i = 0; i < 10; i++) {
-                        realm.createObject(Farmer.class)
+                        farmer = realm.createObject(Farmer.class)
                                 .setFarmSize(Math.random() * 120000)
                                 .setLatitude(6 + Math.random() * 5)
                                 .setLongitude(3 + Math.random() * 8)
                                 .setName(names[(int) (Math.random() * names.length)] + " " +
                                         names[(int) (Math.random() * names.length)])
                                 .setPhone("08106184121");
+                        getFarmerAddress(context, realm, farmer);
                     }
                 }
             });
         }
+    }
+
+    public static int dpToPx(Context context, int dp) {
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+                context.getResources().getDisplayMetrics());
+        return (int) px;
+    }
+
+    public static void getFarmerAddress(Context context, Realm realm, Farmer farmer) {
+        Intent intent = new Intent(context, FetchAddressIntentService.class);
+        Location location = new Location("");
+        location.setLatitude(farmer.getLatitude());
+        location.setLongitude(farmer.getLongitude());
+        intent.putExtra(FetchAddressIntentService.LOCATION_DATA_EXTRA, location);
+        intent.putExtra(FetchAddressIntentService.FARMER_EXTRA, farmer.getId());
+        context.startService(intent);
     }
 
     public class ResizeAnimation extends Animation {

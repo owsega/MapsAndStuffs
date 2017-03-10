@@ -17,6 +17,7 @@ public class Farmer extends RealmObject {
     private double longitude;
     private double farmSize;
     private String image;
+    private String address;
 
     public Farmer() {
         setId(System.nanoTime());
@@ -71,13 +72,13 @@ public class Farmer extends RealmObject {
         return farmSize;
     }
 
-    public String getFarmSizeStr() {
-        return farmSize + "ha";
-    }
-
     public Farmer setFarmSize(double farmSize) {
         this.farmSize = farmSize;
         return this;
+    }
+
+    public String getFarmSizeStr() {
+        return farmSize + " hectares";
     }
 
     public String getImage() {
@@ -89,9 +90,16 @@ public class Farmer extends RealmObject {
         return this;
     }
 
-    public String getDescription() {
-        return getPhone() + "\n" +
-                getLatitude() + " " + getLongitude() + "\n" +
-                "Farm size: " + getFarmSize();
+    public String getLatLong() {
+        return "(" + getLatitude() + "," + getLongitude() + ")";
+    }
+
+    public String getAddress() {
+        return this.address != null ? address : getLatLong();
+    }
+
+    public Farmer setAddress(String address) {
+        this.address = address;
+        return this;
     }
 }
