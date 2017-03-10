@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,8 +14,6 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -25,16 +24,24 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.owsega.hellotractorsample.realm.Farmer;
 import com.owsega.hellotractorsample.realm.FarmerFields;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import butterknife.BindView;
 import butterknife.OnClick;
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmConfiguration;
 import io.realm.RealmResults;
 
+import static com.owsega.hellotractorsample.FetchAddressIntentService.FARMER_EXTRA;
+
 public class MapsActivity extends BaseActivity implements
         OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener {
+        GoogleMap.OnMarkerClickListener,
+        RealmChangeListener<RealmResults<Farmer>> {
 
+    private final Map<Long, Marker> mMarkers = new ConcurrentHashMap<Long, Marker>();
     @BindView(R.id.profile_pic)
     ImageView profile_pic;
     @BindView(R.id.header_wrapper)
@@ -51,7 +58,6 @@ public class MapsActivity extends BaseActivity implements
     TextView textViewOptions;
     Farmer currentFarmer;
     private GoogleMap mMap;
-
     private BottomSheetBehavior bottomSheetBehavior;
 
     @Override
@@ -101,7 +107,6 @@ public class MapsActivity extends BaseActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        realm.deleteAll();  // todo remove
         Utils.addDummyFarmers(this, realm);
     }
 
@@ -142,14 +147,20 @@ public class MapsActivity extends BaseActivity implements
 
         // add farmers' markers to map
         RealmResults<Farmer> farmers = realm.where(Farmer.class).findAll();
+        farmers.addChangeListener(this);
+        addAllFarmersMarkers(farmers);
+    }
+
+    private void addAllFarmersMarkers(RealmResults<Farmer> farmers) {
         LatLng location;
         for (Farmer farmer : farmers) {
             location = new LatLng(farmer.getLatitude(), farmer.getLongitude());
-            mMap.addMarker(new MarkerOptions()
+            Marker oldMarker = mMarkers.put(farmer.getId(), mMap.addMarker(new MarkerOptions()
                     .position(location)
                     .title(String.valueOf(farmer.getId()))
                     .snippet(farmer.getLatLong())
-                    .draggable(false));
+                    .draggable(false)));
+            if (oldMarker != null) oldMarker.remove();
         }
     }
 
@@ -169,20 +180,26 @@ public class MapsActivity extends BaseActivity implements
     @OnClick(R.id.update_btn)
     public void updateFarmer() {
         startActivity(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
-                .putExtra(Intent.EXTRA_REFERRER, currentFarmer.getId()));
+                .putExtra(FARMER_EXTRA, currentFarmer.getId()));
     }
 
     private void showBottomSheet() {
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         bottomSheetBehavior.setHideable(false);
 
-        name.setText(currentFarmer.getName());
-        address.setText(currentFarmer.getLatLong());
-        phone.setText(currentFarmer.getPhone());
-        farmSize.setText(currentFarmer.getFarmSizeStr());
-        Glide.with(this)
-                .load("http://loremflickr.com/320/240")
-                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                .into(profile_pic);
+        try {
+            name.setText(currentFarmer.getName());
+            address.setText(currentFarmer.getLatLong());
+            phone.setText(currentFarmer.getPhone());
+            farmSize.setText(currentFarmer.getFarmSizeStr());
+            Utils.loadProfilePic(this, profile_pic, currentFarmer.getImage());
+        } catch (Exception ignored) {
+        }
+    }
+
+    @Override
+    public void onChange(RealmResults<Farmer> farmers) {
+        Log.e("seyi","change is here!!!");
+        addAllFarmersMarkers(farmers);
     }
 }

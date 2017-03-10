@@ -2,5 +2,7 @@
 <resources>
     <color name="colorPrimary">#FF481D</color>
     <color name="colorPrimaryDark">#FF0400</color>
-    <color name="colorAccent">#FFF</color>
+    <color name="colorAccent">#FF481D</color>
+    <color name="efef">#efefef</color>
+    <color name="alpha50_colorPrimary">#80FF481D</color>
 </resources>

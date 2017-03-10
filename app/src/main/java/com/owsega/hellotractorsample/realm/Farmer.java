@@ -1,7 +1,10 @@
 package com.owsega.hellotractorsample.realm;
 
+import java.util.Scanner;
+
 import io.realm.RealmObject;
 import io.realm.annotations.Index;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Holds a farmer object
@@ -10,6 +13,7 @@ import io.realm.annotations.Index;
  */
 public class Farmer extends RealmObject {
     @Index
+    @PrimaryKey
     private long id;
     private String name;
     private String phone;
@@ -92,6 +96,28 @@ public class Farmer extends RealmObject {
 
     public String getLatLong() {
         return "(" + getLatitude() + "," + getLongitude() + ")";
+    }
+
+    public void setLatLong(String s) {
+        Double lat = null;
+        Double lon = null;
+        Scanner scanner = new Scanner(s);
+        while (scanner.hasNext()) {
+            if (scanner.hasNextDouble()) {
+                lat = scanner.nextDouble();
+                break;
+            } else scanner.next();
+        }
+        while (scanner.hasNext()) {
+            if (scanner.hasNextDouble()) {
+                lon = scanner.nextDouble();
+                break;
+            } else scanner.next();
+        }
+        if (lat != null && lon != null) {
+            setLatitude(lat);
+            setLongitude(lon);
+        }
     }
 
     public String getAddress() {

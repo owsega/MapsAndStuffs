@@ -15,5 +15,8 @@
     <string name="action_add">Add</string>
     <string name="action_add_farmer">Add a Farmer</string>
     <string name="action_update">Update Farmer</string>
+    <string name="location_permission_denied">Location Permission Denied</string>
+    <string name="permission_required_toast">Permission Required Toast</string>
+    <string name="permission_rationale_location">App is useless without access to location data</string>
 
 </resources>
