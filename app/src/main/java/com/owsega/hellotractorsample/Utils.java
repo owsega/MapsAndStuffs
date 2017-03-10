@@ -32,7 +32,6 @@ import static com.owsega.hellotractorsample.realm.Farmer.deleteFarmer;
  */
 public class Utils {
 
-
     public static void showDeleteFarmerDialog(final Context ctx, final Farmer farmer) {
         new AlertDialog.Builder(ctx)
                 .setMessage(ctx.getString(R.string.delete_armer_confirmation, farmer.getName()))

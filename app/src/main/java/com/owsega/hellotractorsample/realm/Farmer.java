@@ -33,6 +33,7 @@ public class Farmer extends RealmObject {
     }
 
     public static void deleteFarmer(Context ctx, final Farmer farmer) {
+        FarmerEntity.deleteFarmer((BaseActivity) ctx, FarmerEntity.getFarmerEntity(farmer));
         Realm realm = null;
         try {
             realm = Realm.getDefaultInstance();
@@ -80,6 +81,25 @@ public class Farmer extends RealmObject {
                     }*/
                 }
             });
+        }
+    }
+
+    public static void saveFarmers(final FarmerEntity[] results) {
+        Realm realm = null;
+        try {
+            realm = Realm.getDefaultInstance();
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    for (FarmerEntity entity : results) {
+                        realm.copyToRealmOrUpdate(FarmerEntity.getFarmer(entity));
+                    }
+                }
+            });
+        } finally {
+            if (realm != null) {
+                realm.close();
+            }
         }
     }
 

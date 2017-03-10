@@ -57,16 +57,14 @@ public class FarmerEntity extends GenericJson {
     }
 
 
-    public static void fetchFarmers(BaseActivity context) {
-        FarmerEntity events = new FarmerEntity();
+    public static void fetchFarmersIntoRealm(BaseActivity context) {
         Client mKinveyClient = context.getKinvey();
         Query myQuery = mKinveyClient.query();
         myQuery.notEqual(FarmerFields.NAME, null);
-        AsyncAppData<FarmerEntity> myEvents = mKinveyClient.appData("farmers", FarmerEntity.class);
-        myEvents.get(myQuery, new KinveyListCallback<FarmerEntity>() {
+        getEvents(context).get(myQuery, new KinveyListCallback<FarmerEntity>() {
             @Override
             public void onSuccess(FarmerEntity[] results) {
-                Log.v("TAG", "received " + results.length + " events");
+                Farmer.saveFarmers(results);
             }
 
             @Override
@@ -109,7 +107,10 @@ public class FarmerEntity extends GenericJson {
                 .setName("Hello Tractor Inc")
                 .setFarmSize(0)
                 .setPhone("09096909999");
+        saveFarmer(context, farmer);
+    }
 
+    public static void saveFarmer(BaseActivity context, FarmerEntity farmer) {
         getEvents(context).save(farmer, new KinveyClientCallback<FarmerEntity>() {
             @Override
             public void onSuccess(FarmerEntity farmerEntity) {

@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.kinvey.android.callback.KinveyUserCallback;
 import com.kinvey.java.User;
 import com.owsega.hellotractorsample.realm.Farmer;
+import com.owsega.hellotractorsample.realm.FarmerEntity;
 import com.owsega.hellotractorsample.realm.FarmerFields;
 
 import java.util.Map;
@@ -87,18 +88,14 @@ public class MapsActivity extends BaseActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        FarmerEntity.fetchFarmersIntoRealm(this);
+
         FrameLayout bottomSheetLayout = (FrameLayout) findViewById(R.id.bottom_sheet_wrappper);
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
         hideBottomSheet();
-//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         bottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_HIDDEN:
-//                        finish();
-                        break;
-                }
             }
 
             @Override
@@ -143,15 +140,6 @@ public class MapsActivity extends BaseActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -234,7 +222,6 @@ public class MapsActivity extends BaseActivity implements
 
     private void showBottomSheet() {
         bottomSheetBehavior.setPeekHeight(Utils.dpToPx(this, 80));
-//        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
         bottomSheetBehavior.setHideable(false);
 
         try {

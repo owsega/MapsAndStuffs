@@ -46,6 +46,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.owsega.hellotractorsample.realm.Farmer;
+import com.owsega.hellotractorsample.realm.FarmerEntity;
 import com.owsega.hellotractorsample.realm.FarmerFields;
 
 import java.io.File;
@@ -178,17 +179,18 @@ public class FarmerDetailsActivity extends BaseActivity implements
         }
 
         final double finalFarmsize = farmsize;
-        final Farmer farmer = new Farmer();
+        final Farmer farmer = new Farmer()
+                .setFarmSize(finalFarmsize)
+                .setName(name.getText().toString())
+                .setPhone(phone.getText().toString())
+                .setLatitude(mLocation.getLatitude())
+                .setLongitude(mLocation.getLongitude())
+                .setImage(Utils.getImageString(selectedImage.getDrawable()));
+        Utils.getFarmerAddress(FarmerDetailsActivity.this, realm, farmer);
+        FarmerEntity.saveFarmer(FarmerDetailsActivity.this, FarmerEntity.getFarmerEntity(farmer));
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
-                farmer.setFarmSize(finalFarmsize);
-                farmer.setName(name.getText().toString());
-                farmer.setPhone(phone.getText().toString());
-                farmer.setLatitude(mLocation.getLatitude());
-                farmer.setLongitude(mLocation.getLongitude());
-                farmer.setImage(Utils.getImageString(selectedImage.getDrawable()));
-                Utils.getFarmerAddress(FarmerDetailsActivity.this, realm, farmer);
                 realm.copyToRealmOrUpdate(farmer);
             }
         }, new Realm.Transaction.OnSuccess() {
@@ -202,7 +204,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                         setResult(RESULT_OK, getIntent().putExtra(FARMER_EXTRA, farmer.getId()));
                         finish();
                     }
-                }, 2000);
+                }, 1000);
             }
         }, new Realm.Transaction.OnError() {
             @Override
