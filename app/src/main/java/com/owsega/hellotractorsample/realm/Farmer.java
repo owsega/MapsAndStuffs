@@ -1,10 +1,14 @@
 package com.owsega.hellotractorsample.realm;
 
-import java.util.Scanner;
+import android.content.Context;
 
+import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
+
+import static com.owsega.hellotractorsample.Utils.getFarmerAddress;
+import static com.owsega.hellotractorsample.Utils.names;
 
 /**
  * Holds a farmer object
@@ -25,6 +29,57 @@ public class Farmer extends RealmObject {
 
     public Farmer() {
         setId(System.nanoTime());
+    }
+
+    public static void deleteFarmer(Context ctx, final Farmer farmer) {
+        Realm realm = null;
+        try {
+            realm = Realm.getDefaultInstance();
+            realm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    farmer.deleteFromRealm();
+                }
+            });
+        } finally {
+            if (realm != null) {
+                realm.close();
+            }
+        }
+    }
+
+    public static void addDummyFarmers(final Context context, Realm realm) {
+
+        long farmerCount = realm.where(Farmer.class).count();
+        if (farmerCount < 25) {
+            realm.executeTransactionAsync(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    realm.deleteAll();
+
+                    Farmer farmer = new Farmer()
+                            .setLatitude(9.078875)
+                            .setLatitude(7.484294)
+                            .setName("Hello Tractor Inc")
+                            .setFarmSize(0)
+                            .setPhone("09096909999");
+                    getFarmerAddress(context, realm, farmer);
+                    realm.copyToRealmOrUpdate(farmer);
+
+                    for (int i = 0; i < 10; i++) {
+                        farmer = new Farmer()
+                                .setFarmSize(Math.random() * 120000)
+                                .setLatitude(6 + Math.random() * 5)
+                                .setLongitude(3 + Math.random() * 8)
+                                .setName(names[(int) (Math.random() * names.length)] + " " +
+                                        names[(int) (Math.random() * names.length)])
+                                .setPhone("08106184121");
+                        getFarmerAddress(context, realm, farmer);
+                        realm.copyToRealmOrUpdate(farmer);
+                    }
+                }
+            });
+        }
     }
 
     public long getId() {
@@ -96,32 +151,6 @@ public class Farmer extends RealmObject {
 
     public String getLatLong() {
         return "(" + getLatitude() + "," + getLongitude() + ")";
-    }
-
-    public void setLatLong(String s) {
-        Double lat = null;
-        Double lon = null;
-        Scanner scanner = new Scanner(s);
-        while (scanner.hasNext()) {
-            if (scanner.hasNextDouble()) {
-                lat = scanner.nextDouble();
-                break;
-            } else scanner.next();
-        }
-        while (scanner.hasNext()) {
-            if (scanner.hasNextDouble()) {
-                lon = scanner.nextDouble();
-                break;
-            } else scanner.next();
-        }
-        if (lat != null && lon != null) {
-            setLatitude(lat);
-            setLongitude(lon);
-        }
-    }
-
-    public String getAddress() {
-        return this.address != null ? address : getLatLong();
     }
 
     public Farmer setAddress(String address) {

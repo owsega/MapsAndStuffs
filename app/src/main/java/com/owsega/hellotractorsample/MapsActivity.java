@@ -41,7 +41,7 @@ public class MapsActivity extends BaseActivity implements
         GoogleMap.OnMarkerClickListener,
         RealmChangeListener<RealmResults<Farmer>> {
 
-    private final Map<Long, Marker> mMarkers = new ConcurrentHashMap<Long, Marker>();
+    private final Map<Long, Marker> mMarkers = new ConcurrentHashMap<>();
     @BindView(R.id.profile_pic)
     ImageView profile_pic;
     @BindView(R.id.header_wrapper)
@@ -107,7 +107,7 @@ public class MapsActivity extends BaseActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        Utils.addDummyFarmers(this, realm);
+        Farmer.addDummyFarmers(this, realm);
     }
 
     @Override
@@ -152,6 +152,7 @@ public class MapsActivity extends BaseActivity implements
     }
 
     private void addAllFarmersMarkers(RealmResults<Farmer> farmers) {
+        mMap.clear();
         LatLng location;
         for (Farmer farmer : farmers) {
             location = new LatLng(farmer.getLatitude(), farmer.getLongitude());
@@ -166,21 +167,30 @@ public class MapsActivity extends BaseActivity implements
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        Long farmerId = Long.valueOf(marker.getTitle());
-        currentFarmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();
-        showBottomSheet();
+        try {
+            Long farmerId = Long.valueOf(marker.getTitle());
+            currentFarmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();
+            if (currentFarmer != null) showBottomSheet();
+            else hideBottomSheet();
+        } catch (Exception ignored) {
+        }
         return true;
+    }
+
+    private void hideBottomSheet() {
+        bottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
     @OnClick(R.id.delete_btn)
     public void deleteFarmer() {
-        Utils.showDeleteFarmerDialog(this, realm, currentFarmer);
+        if (currentFarmer != null) Utils.showDeleteFarmerDialog(this, currentFarmer);
     }
 
     @OnClick(R.id.update_btn)
     public void updateFarmer() {
-        startActivity(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
-                .putExtra(FARMER_EXTRA, currentFarmer.getId()));
+        if (currentFarmer != null)
+            startActivity(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
+                    .putExtra(FARMER_EXTRA, currentFarmer.getId()));
     }
 
     private void showBottomSheet() {
@@ -199,7 +209,7 @@ public class MapsActivity extends BaseActivity implements
 
     @Override
     public void onChange(RealmResults<Farmer> farmers) {
-        Log.e("seyi","change is here!!!");
+        Log.e("seyi", "change is here!!!");
         addAllFarmersMarkers(farmers);
     }
 }

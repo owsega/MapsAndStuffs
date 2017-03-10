@@ -105,6 +105,7 @@ public class FetchAddressIntentService extends IntentService {
                             .setAddress(message);
                 }
             });
+        }catch (Exception ignored) {
         } finally {
             if (realm != null) {
                 realm.close();

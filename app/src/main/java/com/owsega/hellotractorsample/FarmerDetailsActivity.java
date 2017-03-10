@@ -18,7 +18,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -128,7 +127,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
             if (farmer != null) {
                 name.setText(farmer.getName());
                 phone.setText(farmer.getPhone());
-                farmSize.setText(farmer.getFarmSizeStr());
+                farmSize.setText(String.valueOf(farmer.getFarmSize()));
                 Utils.loadProfilePic(this, selectedImage, farmer.getImage());
                 Location location = new Location("FromRealm");
                 location.setLatitude(farmer.getLatitude());
@@ -417,7 +416,8 @@ public class FarmerDetailsActivity extends BaseActivity implements
         int id = item.getItemId();
 
         if (id == R.id.action_delete) {
-            Utils.showDeleteFarmerDialog(this, realm, currentFarmer);
+            if (currentFarmer != null) Utils.showDeleteFarmerDialog(this, currentFarmer);
+            finish();
             return true;
         }
 
@@ -534,9 +534,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                     case LocationSettingsStatusCodes.SUCCESS:
                         // All location settings are satisfied. The client can
                         // initialize location requests here.
-                        //todo ????
                         startLocationUpdates();
-                        Log.e("seyi", "what to do here??");
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         // Location settings are not satisfied, but this can be fixed
