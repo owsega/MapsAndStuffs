@@ -16,7 +16,13 @@
     <string name="action_add_farmer">Add a Farmer</string>
     <string name="action_update">Update Farmer</string>
     <string name="location_permission_denied">Location Permission Denied</string>
-    <string name="permission_required_toast">Permission Required Toast</string>
+    <string name="permission_required_toast">Permission required for proper app behaviour</string>
     <string name="permission_rationale_location">App is useless without access to location data</string>
+    <string name="name">Name</string>
+    <string name="phone">Phone</string>
+    <string name="farm_size_in_hectares">Farm Size in Hectares</string>
+    <string name="pick_location">Pick Location</string>
+    <string name="save">Save</string>
+    <string name="location_selected">Location selected!</string>
 
 </resources>

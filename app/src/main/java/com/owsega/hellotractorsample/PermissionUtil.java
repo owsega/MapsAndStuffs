@@ -172,7 +172,7 @@ public abstract class PermissionUtil {
         @Override
         public void onDismiss(DialogInterface dialog) {
             super.onDismiss(dialog);
-            if (mFinishActivity) {
+            if (mFinishActivity && getActivity() !=  null) {
                 Toast.makeText(getActivity(),
                         R.string.permission_required_toast,
                         Toast.LENGTH_SHORT)

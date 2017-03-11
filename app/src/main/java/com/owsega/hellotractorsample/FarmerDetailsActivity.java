@@ -38,10 +38,11 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -61,11 +62,20 @@ import io.realm.Realm;
 
 import static com.owsega.hellotractorsample.FetchAddressIntentService.FARMER_EXTRA;
 import static com.owsega.hellotractorsample.R.id.location;
+import static com.owsega.hellotractorsample.R.id.map;
 
+/**
+ * Handles creation and deletion of farmers.
+ *
+ * If the activity finishes successfully, it returns the id of the edited/created farmer in
+ * the result intent
+ *
+ * @author Owoeye Oluwaseyi
+ */
 public class FarmerDetailsActivity extends BaseActivity implements
         GoogleMap.OnMyLocationButtonClickListener,
         OnMapReadyCallback,
-        GoogleMap.OnMapLongClickListener,
+        OnMapLongClickListener,
         ActivityCompat.OnRequestPermissionsResultCallback,
         GoogleApiClient.ConnectionCallbacks,
         LocationListener {
@@ -98,6 +108,13 @@ public class FarmerDetailsActivity extends BaseActivity implements
     private Location mLocation;
     private GoogleApiClient mGoogleApiClient;
 
+    private LongPressLocationSource longPressLocationSource;
+    /**
+     * monitors if we should accept location updates from other sources.
+     * While this is true, location updates from FusedLocationApi is ignored.
+     */
+    private boolean isLongPressSource = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,7 +125,9 @@ public class FarmerDetailsActivity extends BaseActivity implements
 
         bottomSheetLayout.setPeekOnDismiss(true);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        longPressLocationSource = new LongPressLocationSource();
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(map);
         mapFragment.getMapAsync(this);
 
         if (mGoogleApiClient == null) {
@@ -118,7 +137,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                     .build();
         }
         if (savedInstanceState != null && savedInstanceState.keySet().contains(LOCATION_KEY)) {
-            onLocationChanged((Location) savedInstanceState.getParcelable(LOCATION_KEY));
+            notifyLocationChanged((Location) savedInstanceState.getParcelable(LOCATION_KEY));
         }
 
         if (getIntent().hasExtra(FARMER_EXTRA)) {  // it means we are updating not creating a new guy
@@ -132,7 +151,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                 Location location = new Location("FromRealm");
                 location.setLatitude(farmer.getLatitude());
                 location.setLongitude(farmer.getLongitude());
-                onLocationChanged(location);
+                notifyLocationChanged(location);
             }
             setTitle(R.string.title_activity_farmer_update);
         }
@@ -200,7 +219,6 @@ public class FarmerDetailsActivity extends BaseActivity implements
                 name.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        setResult(RESULT_OK);
                         setResult(RESULT_OK, getIntent().putExtra(FARMER_EXTRA, farmer.getId()));
                         finish();
                     }
@@ -349,9 +367,6 @@ public class FarmerDetailsActivity extends BaseActivity implements
     /**
      * This utility function combines the camera intent creation and image file creation, and
      * ultimately fires the intent.
-     *
-     * @see {@link #createCameraIntent()}
-     * @see {@link #createImageFile()}
      */
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = createCameraIntent();
@@ -431,6 +446,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
     @Override
     public boolean onMyLocationButtonClick() {
         mMap.animateCamera(CameraUpdateFactory.zoomIn());
+        isLongPressSource = false;
         return false;
     }
 
@@ -441,6 +457,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMapLongClickListener(this);
         enableMyLocation();
+
     }
 
     /**
@@ -481,12 +498,14 @@ public class FarmerDetailsActivity extends BaseActivity implements
     protected void onPause() {
         super.onPause();
 
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        if (mGoogleApiClient.isConnected())
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
         if (mGoogleApiClient.isConnected()) {
             startLocationUpdates();
         }
@@ -513,7 +532,8 @@ public class FarmerDetailsActivity extends BaseActivity implements
             PermissionUtil.requestPermission(this, REQUEST_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION, true);
         } else if (mMap != null) {
             // Access to the location has been granted to the app.
-            onLocationChanged(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
+            if (!isLongPressSource)
+                notifyLocationChanged(LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient));
             createLocationRequest();
         }
         startLocationUpdates();
@@ -532,7 +552,6 @@ public class FarmerDetailsActivity extends BaseActivity implements
             @Override
             public void onResult(@NonNull LocationSettingsResult result) {
                 final Status status = result.getStatus();
-                final LocationSettingsStates states = result.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
                         // All location settings are satisfied. The client can
@@ -565,10 +584,16 @@ public class FarmerDetailsActivity extends BaseActivity implements
     public void onConnectionSuspended(int i) {
     }
 
+    public void notifyLocationChanged(Location location) {
+        if (location != null) {
+            mLocation = location;
+            updateUI();
+        }
+    }
+
     @Override
     public void onLocationChanged(Location location) {
-        if (location != null) mLocation = location;
-        updateUI();
+        if (!isLongPressSource) notifyLocationChanged(location);
     }
 
     private void updateUI() {
@@ -584,10 +609,45 @@ public class FarmerDetailsActivity extends BaseActivity implements
 
     @Override
     public void onMapLongClick(LatLng point) {
-        Location location = new Location("LongPressLocationProvider");
+        Toast.makeText(this, R.string.location_selected, Toast.LENGTH_SHORT).show();
+        if (mMap != null) {
+            mMap.setLocationSource(longPressLocationSource);
+            isLongPressSource = true;
+        }
+        longPressLocationSource.onMapLongClick(point);
+        Location location = new Location(LongPressLocationSource.TAG);
         location.setLatitude(point.latitude);
         location.setLongitude(point.longitude);
         location.setAccuracy(100);
-        onLocationChanged(location);
+        if (isLongPressSource) notifyLocationChanged(location);
     }
+
+    private static class LongPressLocationSource implements LocationSource, OnMapLongClickListener {
+
+        static final String TAG = "LongPressLocationProvider";
+
+        private OnLocationChangedListener mListener;
+
+        @Override
+        public void activate(OnLocationChangedListener listener) {
+            mListener = listener;
+        }
+
+        @Override
+        public void deactivate() {
+            mListener = null;
+        }
+
+        @Override
+        public void onMapLongClick(LatLng point) {
+            if (mListener != null) {
+                Location location = new Location(TAG);
+                location.setLatitude(point.latitude);
+                location.setLongitude(point.longitude);
+                location.setAccuracy(100);
+                mListener.onLocationChanged(location);
+            }
+        }
+    }
+
 }

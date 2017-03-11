@@ -40,6 +40,11 @@ import io.realm.RealmResults;
 
 import static com.owsega.hellotractorsample.FetchAddressIntentService.FARMER_EXTRA;
 
+/**
+ * Home Activity containing the maps and markers indicating current farmers on the app
+ *
+ * @author Owoeye Oluwaseyi
+ */
 public class MapsActivity extends BaseActivity implements
         OnMapReadyCallback,
         GoogleMap.OnMarkerClickListener,
