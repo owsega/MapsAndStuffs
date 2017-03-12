@@ -9,8 +9,6 @@ import io.realm.RealmObject;
 import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 
-import static com.owsega.hellotractorsample.Utils.getFarmerAddress;
-
 /**
  * Holds a farmer object
  *
@@ -47,40 +45,6 @@ public class Farmer extends RealmObject {
             if (realm != null) {
                 realm.close();
             }
-        }
-    }
-
-    public static void addDummyFarmers(final Context context, Realm realm) {
-        long farmerCount = realm.where(Farmer.class).count();
-        if (farmerCount < 25) {
-            realm.executeTransactionAsync(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    realm.deleteAll();
-
-                    Farmer farmer = new Farmer()
-                            .setLatitude(9.078875)
-                            .setLatitude(7.484294)
-                            .setName("Hello Tractor Inc")
-                            .setFarmSize(0)
-                            .setPhone("09096909999");
-                    getFarmerAddress(context, realm, farmer);
-                    realm.copyToRealmOrUpdate(farmer);
-                    FarmerEntity.addDummyFarmers((BaseActivity) context);
-
-                /*    for (int i = 0; i < 10; i++) {
-                        farmer = new Farmer()
-                                .setFarmSize(Math.random() * 120000)
-                                .setLatitude(6 + Math.random() * 5)
-                                .setLongitude(3 + Math.random() * 8)
-                                .setName(names[(int) (Math.random() * names.length)] + " " +
-                                        names[(int) (Math.random() * names.length)])
-                                .setPhone("08106184121");
-                        getFarmerAddress(context, realm, farmer);
-                        realm.copyToRealmOrUpdate(farmer);
-                    }*/
-                }
-            });
         }
     }
 
@@ -171,7 +135,12 @@ public class Farmer extends RealmObject {
     }
 
     public String getLatLong() {
-        return "(" + getLatitude() + "," + getLongitude() + ")";
+        return getAddress() != null ? getAddress()
+                : "(" + getLatitude() + "," + getLongitude() + ")";
+    }
+
+    public String getAddress() {
+        return address;
     }
 
     public Farmer setAddress(String address) {

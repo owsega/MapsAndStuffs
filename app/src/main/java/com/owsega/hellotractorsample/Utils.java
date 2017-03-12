@@ -21,8 +21,6 @@ import com.owsega.hellotractorsample.realm.Farmer;
 
 import java.io.ByteArrayOutputStream;
 
-import io.realm.Realm;
-
 import static com.owsega.hellotractorsample.realm.Farmer.deleteFarmer;
 
 /**
@@ -52,7 +50,7 @@ public class Utils {
         return (int) px;
     }
 
-    public static void getFarmerAddress(Context context, Realm realm, Farmer farmer) {
+    public static void getFarmerAddress(Context context, Farmer farmer) {
         Intent intent = new Intent(context, FetchAddressIntentService.class);
         Location location = new Location("");
         location.setLatitude(farmer.getLatitude());

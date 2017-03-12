@@ -205,7 +205,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
                 .setLatitude(mLocation.getLatitude())
                 .setLongitude(mLocation.getLongitude())
                 .setImage(Utils.getImageString(selectedImage.getDrawable()));
-        Utils.getFarmerAddress(FarmerDetailsActivity.this, realm, farmer);
+        Utils.getFarmerAddress(FarmerDetailsActivity.this, farmer);
         FarmerEntity.saveFarmer(FarmerDetailsActivity.this, FarmerEntity.getFarmerEntity(farmer));
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override

@@ -171,7 +171,6 @@ public class MapsActivity extends BaseActivity implements
         Marker oldMarker = mMarkers.put(farmer.getId(), mMap.addMarker(new MarkerOptions()
                 .position(location)
                 .title(String.valueOf(farmer.getId()))
-                .snippet(farmer.getLatLong())
                 .draggable(false)));
         if (oldMarker != null) oldMarker.remove();
     }

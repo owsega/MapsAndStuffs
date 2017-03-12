@@ -19,7 +19,8 @@ import com.owsega.hellotractorsample.BaseActivity;
  * @author Seyi Owoeye. Created on 3/9/17.
  */
 public class FarmerEntity extends GenericJson {
-    @Key
+    public static final String FARMERS = "farmers";
+    @Key("_id")
     private long id;
     @Key
     private String name;
@@ -43,7 +44,7 @@ public class FarmerEntity extends GenericJson {
     public static void deleteFarmer(BaseActivity ctx, final FarmerEntity farmer) {
         Client mKinveyClient = ctx.getKinvey();
         Query query = mKinveyClient.query().equals(FarmerFields.ID, farmer.getId());
-        AsyncAppData<FarmerEntity> myevents = mKinveyClient.appData("farmers", FarmerEntity.class);
+        AsyncAppData<FarmerEntity> myevents = mKinveyClient.appData(FARMERS, FarmerEntity.class);
         myevents.delete(query, new KinveyDeleteCallback() {
             @Override
             public void onSuccess(KinveyDeleteResponse kinveyDeleteResponse) {
@@ -97,7 +98,7 @@ public class FarmerEntity extends GenericJson {
     }
 
     private static AsyncAppData<FarmerEntity> getEvents(BaseActivity context) {
-        return context.getKinvey().appData("farmers", FarmerEntity.class);
+        return context.getKinvey().appData(FARMERS, FarmerEntity.class);
     }
 
     public static void addDummyFarmers(BaseActivity context) {
@@ -196,5 +197,9 @@ public class FarmerEntity extends GenericJson {
     public FarmerEntity setAddress(String address) {
         this.address = address;
         return this;
+    }
+
+    public String getAddress() {
+        return address;
     }
 }

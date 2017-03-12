@@ -9,7 +9,12 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.kinvey.android.Client;
+import com.kinvey.android.callback.KinveyListCallback;
+import com.kinvey.java.Query;
+import com.kinvey.java.core.KinveyClientCallback;
 import com.owsega.hellotractorsample.realm.Farmer;
+import com.owsega.hellotractorsample.realm.FarmerEntity;
 import com.owsega.hellotractorsample.realm.FarmerFields;
 
 import java.io.IOException;
@@ -19,17 +24,18 @@ import java.util.Locale;
 
 import io.realm.Realm;
 
+import static com.owsega.hellotractorsample.realm.FarmerEntity.FARMERS;
+
 /**
  * @author Seyi Owoeye. Created on 3/10/17.
  */
 public class FetchAddressIntentService extends IntentService {
     public static final int SUCCESS_RESULT = 0;
     public static final int FAILURE_RESULT = 1;
-    public static final String PACKAGE_NAME = "com.owsega.hellotractorsample";
-    public static final String RESULT_DATA_KEY = PACKAGE_NAME + ".RESULT_DATA_KEY";
-    public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME + ".LOCATION_DATA_EXTRA";
+    public static final String LOCATION_DATA_EXTRA = "locationData";
     public static final String FARMER_EXTRA = "FARMER_ID";
     private static final String TAG = "FetchAddressService";
+
     protected Long farmerId;
 
     public FetchAddressIntentService() {
@@ -38,6 +44,7 @@ public class FetchAddressIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        if (intent == null) return;
         String errorMessage = "";
 
         Geocoder geocoder = new Geocoder(this, Locale.getDefault());
@@ -52,7 +59,6 @@ public class FetchAddressIntentService extends IntentService {
             addresses = geocoder.getFromLocation(
                     location.getLatitude(),
                     location.getLongitude(),
-                    // In this sample, get just a single address.
                     1);
         } catch (IOException ioException) {
             // Catch network or other I/O problems.
@@ -66,6 +72,8 @@ public class FetchAddressIntentService extends IntentService {
                     ", Longitude = " +
                     location.getLongitude(), illegalArgumentException);
         } catch (Exception e) {
+            // Catch other exceptions
+            e.printStackTrace();
         }
 
         // Handle case where no address was found.
@@ -85,14 +93,18 @@ public class FetchAddressIntentService extends IntentService {
                 addressFragments.add(address.getAddressLine(i));
             }
             Log.i(TAG, "Address Found!");
-            deliverResultToReceiver(SUCCESS_RESULT,
-                    TextUtils.join(System.getProperty("line.separator"),
-                            addressFragments));
+            deliverResultToReceiver(SUCCESS_RESULT, TextUtils.join(", ", addressFragments));
         }
     }
 
-    private void deliverResultToReceiver(int resultCode, final String message) {
+    private void deliverResultToReceiver(int resultCode, final String address) {
 
+        if (resultCode == FAILURE_RESULT) {
+            Log.e(TAG, address);
+            return;
+        }
+
+        saveAddressToKinvey(address);
         // save to realm
         Realm realm = null;
         try {
@@ -103,14 +115,43 @@ public class FetchAddressIntentService extends IntentService {
                     realm.where(Farmer.class)
                             .equalTo(FarmerFields.ID, farmerId)
                             .findFirst()
-                            .setAddress(message);
+                            .setAddress(address);
                 }
             });
-        }catch (Exception ignored) {
+        } catch (Exception ignored) {
         } finally {
             if (realm != null) {
                 realm.close();
             }
         }
+    }
+
+    private void saveAddressToKinvey(final String address) {
+        final Client kinvey = new Client.Builder(getApplicationContext()).build();
+        Query myQuery = kinvey.query().equals(FarmerFields.ID, farmerId);
+        kinvey.appData(FARMERS, FarmerEntity.class)
+                .get(myQuery, new KinveyListCallback<FarmerEntity>() {
+                    @Override
+                    public void onSuccess(FarmerEntity[] results) {
+                        FarmerEntity farmer = results[0];
+                        farmer.setAddress(address);
+                        kinvey.appData(FARMERS, FarmerEntity.class)
+                                .save(farmer, new KinveyClientCallback<FarmerEntity>() {
+                                    @Override
+                                    public void onSuccess(FarmerEntity farmerEntity) {
+//                                        Log.e("seyi","address saved to kinvey");
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable throwable) {
+                                    }
+                                });
+                    }
+
+                    @Override
+                    public void onFailure(Throwable error) {
+                        Log.e("TAG", "failed to fetch farmer in order to save the id", error);
+                    }
+                });
     }
 }
