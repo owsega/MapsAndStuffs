@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,9 +25,9 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.kinvey.android.callback.KinveyUserCallback;
 import com.kinvey.java.User;
-import com.owsega.hellotractorsample.realm.Farmer;
-import com.owsega.hellotractorsample.realm.FarmerEntity;
-import com.owsega.hellotractorsample.realm.FarmerFields;
+import com.owsega.hellotractorsample.model.Farmer;
+import com.owsega.hellotractorsample.model.FarmerEntity;
+import com.owsega.hellotractorsample.model.FarmerFields;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,7 +52,7 @@ public class MapsActivity extends BaseActivity implements
         RealmChangeListener<RealmResults<Farmer>> {
 
     private static final int DETAILS_RC = 5;
-    private final Map<Long, Marker> mMarkers = new ConcurrentHashMap<>();
+    private final Map<String, Marker> mMarkers = new ConcurrentHashMap<>();
     @BindView(R.id.profile_pic)
     ImageView profile_pic;
     @BindView(R.id.header_wrapper)
@@ -86,12 +87,14 @@ public class MapsActivity extends BaseActivity implements
 
             @Override
             public void onSuccess(User result) {
+                // todo save login result for reuse...
             }
         });
 
         setContentView(R.layout.activity_maps);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        setTitle(R.string.title_activity_maps);
 
         FarmerEntity.fetchFarmersIntoRealm(this);
 
@@ -170,7 +173,7 @@ public class MapsActivity extends BaseActivity implements
         LatLng location = new LatLng(farmer.getLatitude(), farmer.getLongitude());
         Marker oldMarker = mMarkers.put(farmer.getId(), mMap.addMarker(new MarkerOptions()
                 .position(location)
-                .title(String.valueOf(farmer.getId()))
+                .title(farmer.getId())
                 .draggable(false)));
         if (oldMarker != null) oldMarker.remove();
     }
@@ -178,7 +181,7 @@ public class MapsActivity extends BaseActivity implements
     @Override
     public boolean onMarkerClick(Marker marker) {
         try {
-            Long farmerId = Long.valueOf(marker.getTitle());
+            String farmerId = marker.getTitle();
             currentFarmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();
             if (currentFarmer != null) showBottomSheet();
             else hideBottomSheet();
@@ -202,9 +205,11 @@ public class MapsActivity extends BaseActivity implements
 
     @OnClick(R.id.update_btn)
     public void updateFarmer() {
-        if (currentFarmer != null)
+        if (currentFarmer != null) {
             startActivityForResult(new Intent(MapsActivity.this, FarmerDetailsActivity.class)
                     .putExtra(FARMER_EXTRA, currentFarmer.getId()), DETAILS_RC);
+            hideBottomSheet();
+        }
     }
 
     @Override
@@ -212,8 +217,8 @@ public class MapsActivity extends BaseActivity implements
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == Activity.RESULT_OK) {
             if (data != null && data.hasExtra(FARMER_EXTRA)) {
-                long farmerId = data.getLongExtra(FARMER_EXTRA, 0);
-                if (farmerId <= 0) return;
+                String farmerId = data.getStringExtra(FARMER_EXTRA);
+                if (TextUtils.isEmpty(farmerId)) return;
                 Marker marker = mMarkers.get(farmerId);
                 if (marker != null) marker.remove();
                 Farmer farmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();

@@ -13,9 +13,9 @@ import com.kinvey.android.Client;
 import com.kinvey.android.callback.KinveyListCallback;
 import com.kinvey.java.Query;
 import com.kinvey.java.core.KinveyClientCallback;
-import com.owsega.hellotractorsample.realm.Farmer;
-import com.owsega.hellotractorsample.realm.FarmerEntity;
-import com.owsega.hellotractorsample.realm.FarmerFields;
+import com.owsega.hellotractorsample.model.Farmer;
+import com.owsega.hellotractorsample.model.FarmerEntity;
+import com.owsega.hellotractorsample.model.FarmerFields;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,9 +24,11 @@ import java.util.Locale;
 
 import io.realm.Realm;
 
-import static com.owsega.hellotractorsample.realm.FarmerEntity.FARMERS;
+import static com.owsega.hellotractorsample.model.FarmerEntity.FARMERS;
 
 /**
+ * Reverse Geocoding service for turning latlng coordinates to addresses when a farmer is being saved
+ *
  * @author Seyi Owoeye. Created on 3/10/17.
  */
 public class FetchAddressIntentService extends IntentService {
@@ -36,7 +38,7 @@ public class FetchAddressIntentService extends IntentService {
     public static final String FARMER_EXTRA = "FARMER_ID";
     private static final String TAG = "FetchAddressService";
 
-    protected Long farmerId;
+    protected String farmerId;
 
     public FetchAddressIntentService() {
         super("FetchAddressIntentService");
@@ -51,7 +53,7 @@ public class FetchAddressIntentService extends IntentService {
 
         // Get the location passed to this service through an extra.
         Location location = intent.getParcelableExtra(LOCATION_DATA_EXTRA);
-        farmerId = intent.getLongExtra(FARMER_EXTRA, -1);
+        farmerId = intent.getStringExtra(FARMER_EXTRA);
 
         List<Address> addresses = null;
 
@@ -127,23 +129,29 @@ public class FetchAddressIntentService extends IntentService {
     }
 
     private void saveAddressToKinvey(final String address) {
+        Log.e("seyi", "prepping to save address to kinvey");
         final Client kinvey = new Client.Builder(getApplicationContext()).build();
         Query myQuery = kinvey.query().equals(FarmerFields.ID, farmerId);
         kinvey.appData(FARMERS, FarmerEntity.class)
                 .get(myQuery, new KinveyListCallback<FarmerEntity>() {
                     @Override
                     public void onSuccess(FarmerEntity[] results) {
+                        if (results.length < 1) {
+                            Log.e(TAG, "farmer with given id not found");
+                            return;
+                        }
                         FarmerEntity farmer = results[0];
                         farmer.setAddress(address);
                         kinvey.appData(FARMERS, FarmerEntity.class)
                                 .save(farmer, new KinveyClientCallback<FarmerEntity>() {
                                     @Override
                                     public void onSuccess(FarmerEntity farmerEntity) {
-//                                        Log.e("seyi","address saved to kinvey");
+                                        Log.e("seyi", "address saved to kinvey");
                                     }
 
                                     @Override
                                     public void onFailure(Throwable throwable) {
+                                        Log.e("seyi", "failed to save address to kinvey");
                                     }
                                 });
                     }

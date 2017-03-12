@@ -1,4 +1,4 @@
-package com.owsega.hellotractorsample.realm;
+package com.owsega.hellotractorsample.model;
 
 import android.content.Context;
 
@@ -10,14 +10,14 @@ import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 
 /**
- * Holds a farmer object
+ * Holds a farmer object for Realm
  *
  * @author Seyi Owoeye. Created on 3/9/17.
  */
 public class Farmer extends RealmObject {
     @Index
     @PrimaryKey
-    private long id;
+    private String id;
     private String name;
     private String phone;
     private double latitude;
@@ -27,7 +27,7 @@ public class Farmer extends RealmObject {
     private String address;
 
     public Farmer() {
-        setId(System.nanoTime());
+        setId(String.valueOf(System.nanoTime()));
     }
 
     public static void deleteFarmer(Context ctx, final Farmer farmer) {
@@ -67,11 +67,11 @@ public class Farmer extends RealmObject {
         }
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public Farmer setId(long id) {
+    public Farmer setId(String id) {
         this.id = id;
         return this;
     }

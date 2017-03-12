@@ -17,11 +17,11 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.owsega.hellotractorsample.realm.Farmer;
+import com.owsega.hellotractorsample.model.Farmer;
 
 import java.io.ByteArrayOutputStream;
 
-import static com.owsega.hellotractorsample.realm.Farmer.deleteFarmer;
+import static com.owsega.hellotractorsample.model.Farmer.deleteFarmer;
 
 /**
  * static methods for ease of life

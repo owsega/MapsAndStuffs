@@ -1,4 +1,4 @@
-package com.owsega.hellotractorsample.realm;
+package com.owsega.hellotractorsample.model;
 
 import android.util.Log;
 
@@ -14,44 +14,52 @@ import com.kinvey.java.model.KinveyDeleteResponse;
 import com.owsega.hellotractorsample.BaseActivity;
 
 /**
- * Holds a farmer object
+ * Holds a farmer object for Kinvey
  *
  * @author Seyi Owoeye. Created on 3/9/17.
  */
 public class FarmerEntity extends GenericJson {
     public static final String FARMERS = "farmers";
+
     @Key("_id")
-    private long id;
-    @Key
+    private String id;
+    @Key(FarmerFields.NAME)
     private String name;
-    @Key
+    @Key(FarmerFields.PHONE)
     private String phone;
-    @Key
+    @Key(FarmerFields.LATITUDE)
     private double latitude;
-    @Key
+    @Key(FarmerFields.LONGITUDE)
     private double longitude;
-    @Key
+    @Key(FarmerFields.FARM_SIZE)
     private double farmSize;
-    @Key
+    @Key(FarmerFields.IMAGE)
     private String image;
-    @Key
+    @Key(FarmerFields.ADDRESS)
     private String address;
 
     public FarmerEntity() {
-        setId(System.nanoTime());
+        setId(String.valueOf(System.nanoTime()));
+    }
+
+    public FarmerEntity(String id) {
+        setId(id);
     }
 
     public static void deleteFarmer(BaseActivity ctx, final FarmerEntity farmer) {
+        Log.e("seyi", " prepping to delete farmer");
         Client mKinveyClient = ctx.getKinvey();
-        Query query = mKinveyClient.query().equals(FarmerFields.ID, farmer.getId());
+        Query query = mKinveyClient.query().equals(FarmerFields.ID, String.valueOf(farmer.getId()));
         AsyncAppData<FarmerEntity> myevents = mKinveyClient.appData(FARMERS, FarmerEntity.class);
         myevents.delete(query, new KinveyDeleteCallback() {
             @Override
             public void onSuccess(KinveyDeleteResponse kinveyDeleteResponse) {
+                Log.e("seyi", "farmer delete success");
             }
 
             @Override
             public void onFailure(Throwable e) {
+                Log.e("seyi", "farmer delete failed");
                 Log.e("TAG", "failed to save event data", e);
             }
         });
@@ -59,30 +67,34 @@ public class FarmerEntity extends GenericJson {
 
 
     public static void fetchFarmersIntoRealm(BaseActivity context) {
+        Log.e("seyi", "prepping to fetch all farmers t0 realm");
         Client mKinveyClient = context.getKinvey();
         Query myQuery = mKinveyClient.query();
-        myQuery.notEqual(FarmerFields.NAME, null);
+        myQuery.notEqual(FarmerFields.PHONE, "_");
         getEvents(context).get(myQuery, new KinveyListCallback<FarmerEntity>() {
             @Override
             public void onSuccess(FarmerEntity[] results) {
+                Log.e("seyi", "farmer fetch successful " + results.length);
                 Farmer.saveFarmers(results);
             }
 
             @Override
             public void onFailure(Throwable error) {
-                Log.e("TAG", "failed to fetchByFilterCriteria", error);
+                Log.e("seyi", "farmer fetch failed");
+                Log.e("TAG", "failed to fetchFarmersIntoRealm", error);
             }
         });
     }
 
     public static FarmerEntity getFarmerEntity(Farmer farmer) {
-        return new FarmerEntity()
+        return new FarmerEntity(farmer.getId())
                 .setName(farmer.getName())
                 .setLongitude(farmer.getLongitude())
                 .setLatitude(farmer.getLatitude())
-                .setId(farmer.getId())
+                .setId(String.valueOf(farmer.getId()))
                 .setImage(farmer.getImage())
                 .setFarmSize(farmer.getFarmSize())
+                .setAddress(farmer.getAddress())
                 .setPhone(farmer.getPhone());
     }
 
@@ -93,6 +105,7 @@ public class FarmerEntity extends GenericJson {
                 .setLatitude(farmer.getLatitude())
                 .setId(farmer.getId())
                 .setImage(farmer.getImage())
+                .setAddress(farmer.getAddress())
                 .setFarmSize(farmer.getFarmSize())
                 .setPhone(farmer.getPhone());
     }
@@ -101,33 +114,26 @@ public class FarmerEntity extends GenericJson {
         return context.getKinvey().appData(FARMERS, FarmerEntity.class);
     }
 
-    public static void addDummyFarmers(BaseActivity context) {
-        FarmerEntity farmer = new FarmerEntity()
-                .setLatitude(9.078875)
-                .setLatitude(7.484294)
-                .setName("Hello Tractor Inc")
-                .setFarmSize(0)
-                .setPhone("09096909999");
-        saveFarmer(context, farmer);
-    }
-
     public static void saveFarmer(BaseActivity context, FarmerEntity farmer) {
+        Log.e("seyi","prepping to save farmer");
         getEvents(context).save(farmer, new KinveyClientCallback<FarmerEntity>() {
             @Override
             public void onSuccess(FarmerEntity farmerEntity) {
+                Log.e("seyi","success to save farmer");
             }
 
             @Override
             public void onFailure(Throwable throwable) {
+                Log.e("seyi","failed to save farmer");
             }
         });
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public FarmerEntity setId(long id) {
+    public FarmerEntity setId(String id) {
         this.id = id;
         return this;
     }
@@ -177,10 +183,6 @@ public class FarmerEntity extends GenericJson {
         return this;
     }
 
-    public String getFarmSizeStr() {
-        return farmSize + " hectares";
-    }
-
     public String getImage() {
         return image;
     }
@@ -194,12 +196,12 @@ public class FarmerEntity extends GenericJson {
         return "(" + getLatitude() + "," + getLongitude() + ")";
     }
 
+    public String getAddress() {
+        return address;
+    }
+
     public FarmerEntity setAddress(String address) {
         this.address = address;
         return this;
-    }
-
-    public String getAddress() {
-        return address;
     }
 }

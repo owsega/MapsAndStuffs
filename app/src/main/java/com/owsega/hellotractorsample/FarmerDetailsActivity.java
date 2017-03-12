@@ -46,9 +46,9 @@ import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.owsega.hellotractorsample.realm.Farmer;
-import com.owsega.hellotractorsample.realm.FarmerEntity;
-import com.owsega.hellotractorsample.realm.FarmerFields;
+import com.owsega.hellotractorsample.model.Farmer;
+import com.owsega.hellotractorsample.model.FarmerEntity;
+import com.owsega.hellotractorsample.model.FarmerFields;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +66,7 @@ import static com.owsega.hellotractorsample.R.id.map;
 
 /**
  * Handles creation and deletion of farmers.
- *
+ * <p>
  * If the activity finishes successfully, it returns the id of the edited/created farmer in
  * the result intent
  *
@@ -115,6 +115,8 @@ public class FarmerDetailsActivity extends BaseActivity implements
      */
     private boolean isLongPressSource = false;
 
+    private String mFarmerId;  // id of the farmer being edited
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,8 +143,9 @@ public class FarmerDetailsActivity extends BaseActivity implements
         }
 
         if (getIntent().hasExtra(FARMER_EXTRA)) {  // it means we are updating not creating a new guy
-            Long farmerId = getIntent().getLongExtra(FARMER_EXTRA, 0);
-            Farmer farmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, farmerId).findFirst();
+            mFarmerId = getIntent().getStringExtra(FARMER_EXTRA);
+            if (TextUtils.isEmpty(mFarmerId)) return;
+            Farmer farmer = realm.where(Farmer.class).equalTo(FarmerFields.ID, mFarmerId).findFirst();
             if (farmer != null) {
                 name.setText(farmer.getName());
                 phone.setText(farmer.getPhone());
@@ -205,8 +208,10 @@ public class FarmerDetailsActivity extends BaseActivity implements
                 .setLatitude(mLocation.getLatitude())
                 .setLongitude(mLocation.getLongitude())
                 .setImage(Utils.getImageString(selectedImage.getDrawable()));
-        Utils.getFarmerAddress(FarmerDetailsActivity.this, farmer);
+        if (!TextUtils.isEmpty(mFarmerId)) farmer.setId(mFarmerId);
+
         FarmerEntity.saveFarmer(FarmerDetailsActivity.this, FarmerEntity.getFarmerEntity(farmer));
+        Utils.getFarmerAddress(FarmerDetailsActivity.this, farmer);
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
