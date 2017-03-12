@@ -1,15 +1,11 @@
 package com.owsega.hellotractorsample;
 
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
@@ -17,11 +13,8 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.owsega.hellotractorsample.model.Farmer;
 
 import java.io.ByteArrayOutputStream;
-
-import static com.owsega.hellotractorsample.model.Farmer.deleteFarmer;
 
 /**
  * static methods for ease of life
@@ -30,34 +23,10 @@ import static com.owsega.hellotractorsample.model.Farmer.deleteFarmer;
  */
 public class Utils {
 
-    public static void showDeleteFarmerDialog(final Context ctx, final Farmer farmer) {
-        new AlertDialog.Builder(ctx)
-                .setMessage(ctx.getString(R.string.delete_armer_confirmation, farmer.getName()))
-                .setPositiveButton(R.string.yes,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface d, int which) {
-                                deleteFarmer(ctx, farmer);
-                            }
-                        })
-                .setNegativeButton(R.string.no, null)
-                .show();
-    }
-
     public static int dpToPx(Context context, int dp) {
         float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
                 context.getResources().getDisplayMetrics());
         return (int) px;
-    }
-
-    public static void getFarmerAddress(Context context, Farmer farmer) {
-        Intent intent = new Intent(context, FetchAddressIntentService.class);
-        Location location = new Location("");
-        location.setLatitude(farmer.getLatitude());
-        location.setLongitude(farmer.getLongitude());
-        intent.putExtra(FetchAddressIntentService.LOCATION_DATA_EXTRA, location);
-        intent.putExtra(FetchAddressIntentService.FARMER_EXTRA, farmer.getId());
-        context.startService(intent);
     }
 
     /**

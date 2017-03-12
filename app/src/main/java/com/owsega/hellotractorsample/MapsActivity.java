@@ -1,11 +1,13 @@
 package com.owsega.hellotractorsample;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.TypedValue;
@@ -197,9 +199,19 @@ public class MapsActivity extends BaseActivity implements
     @OnClick(R.id.delete_btn)
     public void deleteFarmer() {
         if (currentFarmer != null) {
-            mMarkers.get(currentFarmer.getId()).remove();
-            Utils.showDeleteFarmerDialog(this, currentFarmer);
-            hideBottomSheet();
+            new AlertDialog.Builder(this)
+                    .setMessage(getString(R.string.delete_armer_confirmation, currentFarmer.getName()))
+                    .setPositiveButton(R.string.yes,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface d, int which) {
+                                    Farmer.deleteFarmer(MapsActivity.this, currentFarmer);
+                                    mMarkers.get(currentFarmer.getId()).remove();
+                                    hideBottomSheet();
+                                }
+                            })
+                    .setNegativeButton(R.string.no, null)
+                    .show();
         }
     }
 

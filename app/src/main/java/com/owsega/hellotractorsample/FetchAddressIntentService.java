@@ -129,7 +129,6 @@ public class FetchAddressIntentService extends IntentService {
     }
 
     private void saveAddressToKinvey(final String address) {
-        Log.e("seyi", "prepping to save address to kinvey");
         final Client kinvey = new Client.Builder(getApplicationContext()).build();
         Query myQuery = kinvey.query().equals(FarmerFields.ID, farmerId);
         kinvey.appData(FARMERS, FarmerEntity.class)
@@ -146,12 +145,10 @@ public class FetchAddressIntentService extends IntentService {
                                 .save(farmer, new KinveyClientCallback<FarmerEntity>() {
                                     @Override
                                     public void onSuccess(FarmerEntity farmerEntity) {
-                                        Log.e("seyi", "address saved to kinvey");
                                     }
 
                                     @Override
                                     public void onFailure(Throwable throwable) {
-                                        Log.e("seyi", "failed to save address to kinvey");
                                     }
                                 });
                     }

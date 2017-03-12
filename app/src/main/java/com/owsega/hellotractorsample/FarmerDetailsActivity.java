@@ -211,7 +211,7 @@ public class FarmerDetailsActivity extends BaseActivity implements
         if (!TextUtils.isEmpty(mFarmerId)) farmer.setId(mFarmerId);
 
         FarmerEntity.saveFarmer(FarmerDetailsActivity.this, FarmerEntity.getFarmerEntity(farmer));
-        Utils.getFarmerAddress(FarmerDetailsActivity.this, farmer);
+        getFarmerAddress(farmer);
         realm.executeTransactionAsync(new Realm.Transaction() {
             @Override
             public void execute(Realm realm) {
@@ -236,6 +236,16 @@ public class FarmerDetailsActivity extends BaseActivity implements
             }
         });
 
+    }
+
+    public void getFarmerAddress(Farmer farmer) {
+        Intent intent = new Intent(this, FetchAddressIntentService.class);
+        Location location = new Location("");
+        location.setLatitude(farmer.getLatitude());
+        location.setLongitude(farmer.getLongitude());
+        intent.putExtra(FetchAddressIntentService.LOCATION_DATA_EXTRA, location);
+        intent.putExtra(FetchAddressIntentService.FARMER_EXTRA, farmer.getId());
+        startService(intent);
     }
 
     private boolean checkNeedsPermission() {

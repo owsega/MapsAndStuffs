@@ -47,19 +47,16 @@ public class FarmerEntity extends GenericJson {
     }
 
     public static void deleteFarmer(BaseActivity ctx, final FarmerEntity farmer) {
-        Log.e("seyi", " prepping to delete farmer");
         Client mKinveyClient = ctx.getKinvey();
         Query query = mKinveyClient.query().equals(FarmerFields.ID, String.valueOf(farmer.getId()));
         AsyncAppData<FarmerEntity> myevents = mKinveyClient.appData(FARMERS, FarmerEntity.class);
         myevents.delete(query, new KinveyDeleteCallback() {
             @Override
             public void onSuccess(KinveyDeleteResponse kinveyDeleteResponse) {
-                Log.e("seyi", "farmer delete success");
             }
 
             @Override
             public void onFailure(Throwable e) {
-                Log.e("seyi", "farmer delete failed");
                 Log.e("TAG", "failed to save event data", e);
             }
         });
@@ -67,20 +64,17 @@ public class FarmerEntity extends GenericJson {
 
 
     public static void fetchFarmersIntoRealm(BaseActivity context) {
-        Log.e("seyi", "prepping to fetch all farmers t0 realm");
         Client mKinveyClient = context.getKinvey();
         Query myQuery = mKinveyClient.query();
         myQuery.notEqual(FarmerFields.PHONE, "_");
         getEvents(context).get(myQuery, new KinveyListCallback<FarmerEntity>() {
             @Override
             public void onSuccess(FarmerEntity[] results) {
-                Log.e("seyi", "farmer fetch successful " + results.length);
                 Farmer.saveFarmers(results);
             }
 
             @Override
             public void onFailure(Throwable error) {
-                Log.e("seyi", "farmer fetch failed");
                 Log.e("TAG", "failed to fetchFarmersIntoRealm", error);
             }
         });
@@ -115,16 +109,14 @@ public class FarmerEntity extends GenericJson {
     }
 
     public static void saveFarmer(BaseActivity context, FarmerEntity farmer) {
-        Log.e("seyi","prepping to save farmer");
         getEvents(context).save(farmer, new KinveyClientCallback<FarmerEntity>() {
             @Override
             public void onSuccess(FarmerEntity farmerEntity) {
-                Log.e("seyi","success to save farmer");
             }
 
             @Override
             public void onFailure(Throwable throwable) {
-                Log.e("seyi","failed to save farmer");
+
             }
         });
     }
