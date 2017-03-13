@@ -205,9 +205,9 @@ public class MapsActivity extends BaseActivity implements
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface d, int which) {
-                                    Farmer.deleteFarmer(MapsActivity.this, currentFarmer);
-                                    mMarkers.get(currentFarmer.getId()).remove();
                                     hideBottomSheet();
+                                    mMarkers.get(currentFarmer.getId()).remove();
+                                    Farmer.deleteFarmer(MapsActivity.this, currentFarmer);
                                 }
                             })
                     .setNegativeButton(R.string.no, null)
