@@ -41,6 +41,8 @@ public class Farmer extends RealmObject {
                     farmer.deleteFromRealm();
                 }
             });
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             if (realm != null) {
                 realm.close();
